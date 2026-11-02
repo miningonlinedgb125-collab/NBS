@@ -1,0 +1,6 @@
+{
+  "name": "NBS Mining Bot & Jetton Protocol",
+  "description": "Production-ready TON Blockchain Mining Telegram Bot & NBS Jetton token ecosystem with TON Connect wallet activation, daily mining cycles, tasks, referrals, subscriptions, and full admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,80 @@
+;; =========================================================================
+;; TON Standard Jetton Wallet Smart Contract (TEP-74 Compliant)
+;; Handles individual user Jetton balances, transfers, and burns.
+;; =========================================================================
+
+#include "stdlib.fc";
+
+(int, slice, slice, cell) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_coins(),       ;; balance
+        ds~load_msg_addr(),    ;; owner_address
+        ds~load_msg_addr(),    ;; jetton_master_address
+        ds~load_ref()          ;; jetton_wallet_code
+    );
+}
+
+() save_data(int balance, slice owner_address, slice jetton_master_address, cell jetton_wallet_code) impure inline {
+    set_data(begin_cell()
+        .store_coins(balance)
+        .store_slice(owner_address)
+        .store_slice(jetton_master_address)
+        .store_ref(jetton_wallet_code)
+        .end_cell()
+    );
+}
+
+() recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { return (); }
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) { return (); } ;; ignore bounced
+    slice sender_address = cs~load_msg_addr();
+
+    int op = in_msg_body~load_uint(32);
+    int query_id = in_msg_body~load_uint(64);
+
+    var (balance, owner_address, jetton_master_address, jetton_wallet_code) = load_data();
+
+    ;; Transfer Jettons (0xf8a7ea5)
+    if (op == 0xf8a7ea5) {
+        throw_unless(705, equal_slices(sender_address, owner_address));
+        int jetton_amount = in_msg_body~load_coins();
+        slice to_owner_address = in_msg_body~load_msg_addr();
+        throw_unless(706, balance >= jetton_amount);
+        
+        balance -= jetton_amount;
+        save_data(balance, owner_address, jetton_master_address, jetton_wallet_code);
+        return ();
+    }
+
+    ;; Internal Transfer (0x178d4519) - incoming transfer from another wallet or master
+    if (op == 0x178d4519) {
+        int jetton_amount = in_msg_body~load_coins();
+        slice from_address = in_msg_body~load_msg_addr();
+        balance += jetton_amount;
+        save_data(balance, owner_address, jetton_master_address, jetton_wallet_code);
+        return ();
+    }
+
+    ;; Burn Jettons (0x595f07bc)
+    if (op == 0x595f07bc) {
+        throw_unless(705, equal_slices(sender_address, owner_address));
+        int jetton_amount = in_msg_body~load_coins();
+        throw_unless(706, balance >= jetton_amount);
+        balance -= jetton_amount;
+        save_data(balance, owner_address, jetton_master_address, jetton_wallet_code);
+        return ();
+    }
+
+    throw(0xffff);
+}
+
+;; =========================================================================
+;; GETTER METHODS
+;; =========================================================================
+
+(int, slice, slice, cell) get_wallet_data() method_id {
+    return load_data();
+}

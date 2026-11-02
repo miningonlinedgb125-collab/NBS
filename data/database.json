@@ -1,0 +1,284 @@
+{
+  "settings": {
+    "tokenName": "NBS",
+    "tokenSymbol": "NBS",
+    "tokenDecimals": 9,
+    "totalSupply": 200000000,
+    "miningSupplyAllocation": 80000000,
+    "tasksSupplyAllocation": 40000000,
+    "referralSupplyAllocation": 30000000,
+    "treasurySupplyAllocation": 50000000,
+    "treasuryWallet": "UQAmUa3boqCwHwe26qqB6rD8Rs7QQ-R7IHUtyxLEX2Uqboby",
+    "jettonMasterAddress": "",
+    "officialFeeWallet": "UQCIi7mqL7DVgxiTMUYP0d6OsqIXKVxclUIgGoq17BTB_im-",
+    "activationFeeTon": 0.05,
+    "minWithdrawalJetton": 50,
+    "withdrawalFeeJetton": 2,
+    "baseMiningDailyReward": 50,
+    "miningCycleHours": 24,
+    "referralSignupReward": 0,
+    "referralActivationReward": 100,
+    "telegramBotUsername": "NBSMining_bot",
+    "telegramBotToken": "9180620527:AAFR_DNWRbzns3p4b8z9wyw0_-VH6T9c3lM",
+    "isMiningEnabled": true,
+    "isWithdrawalEnabled": true,
+    "isAutoWithdrawalEnabled": false
+  },
+  "users": {
+    "123": {
+      "id": "123",
+      "username": "Miner",
+      "firstName": "Friend",
+      "isWalletActivated": false,
+      "createdAt": 1793400892743,
+      "referralCode": "123",
+      "totalReferrals": 0,
+      "activeReferrals": 0,
+      "miningState": {
+        "isMining": false,
+        "lastStartTime": 0,
+        "durationHours": 24,
+        "cycleEndTime": 0,
+        "streakDays": 0,
+        "totalMined": 0,
+        "accumulatedPending": 0
+      },
+      "subscription": {
+        "tierId": "free",
+        "name": "Free Miner",
+        "multiplier": 1,
+        "expiresAt": 0
+      },
+      "balances": {
+        "availableJetton": 0,
+        "lockedJetton": 0,
+        "totalEarned": 0,
+        "miningEarned": 0,
+        "tasksEarned": 0,
+        "referralEarned": 0
+      },
+      "isBanned": false,
+      "role": "user"
+    },
+    "1878942455": {
+      "id": "1878942455",
+      "username": "hamlet1223",
+      "firstName": "Hamlet",
+      "isWalletActivated": false,
+      "createdAt": 1793400730348,
+      "referralCode": "1878942455",
+      "totalReferrals": 0,
+      "activeReferrals": 0,
+      "miningState": {
+        "isMining": true,
+        "lastStartTime": 1793400738682,
+        "durationHours": 24,
+        "cycleEndTime": 1793487138682,
+        "streakDays": 1,
+        "totalMined": 0,
+        "accumulatedPending": 0
+      },
+      "subscription": {
+        "tierId": "free",
+        "name": "Free Miner",
+        "multiplier": 1,
+        "expiresAt": 0
+      },
+      "balances": {
+        "availableJetton": 0,
+        "lockedJetton": 0,
+        "totalEarned": 0,
+        "miningEarned": 0,
+        "tasksEarned": 0,
+        "referralEarned": 0
+      },
+      "isBanned": false,
+      "role": "admin"
+    },
+    "admin_999": {
+      "id": "admin_999",
+      "username": "TON_Mining_Admin",
+      "firstName": "Chief",
+      "lastName": "Admin",
+      "walletAddress": "UQCIi7mqL7DVgxiTMUYP0d6OsqIXKVxclUIgGoq17BTB_im-",
+      "isWalletActivated": true,
+      "activationTxHash": "tx_admin_verified_mainnet",
+      "createdAt": 1792792315488,
+      "referralCode": "admin_999",
+      "totalReferrals": 12,
+      "activeReferrals": 8,
+      "miningState": {
+        "isMining": true,
+        "lastStartTime": 1793346715488,
+        "durationHours": 24,
+        "cycleEndTime": 1793433115488,
+        "streakDays": 4,
+        "totalMined": 320,
+        "accumulatedPending": 0
+      },
+      "subscription": {
+        "tierId": "premium",
+        "name": "TON Tycoon VIP",
+        "multiplier": 5,
+        "expiresAt": 1798581115488
+      },
+      "balances": {
+        "availableJetton": 850,
+        "lockedJetton": 50,
+        "totalEarned": 1200,
+        "miningEarned": 600,
+        "tasksEarned": 200,
+        "referralEarned": 400
+      },
+      "isBanned": false,
+      "role": "admin"
+    },
+    "user_demo": {
+      "id": "user_demo",
+      "username": "CryptoPioneer",
+      "firstName": "Alex",
+      "lastName": "Miner",
+      "walletAddress": "",
+      "isWalletActivated": false,
+      "createdAt": 1793224315488,
+      "referralCode": "user_demo",
+      "totalReferrals": 2,
+      "activeReferrals": 1,
+      "miningState": {
+        "isMining": true,
+        "lastStartTime": 1793397146064,
+        "durationHours": 24,
+        "cycleEndTime": 1793483546064,
+        "streakDays": 1,
+        "totalMined": 45,
+        "accumulatedPending": 0
+      },
+      "subscription": {
+        "tierId": "free",
+        "name": "Free Miner",
+        "multiplier": 1,
+        "expiresAt": 0
+      },
+      "balances": {
+        "availableJetton": 45,
+        "lockedJetton": 0,
+        "totalEarned": 45,
+        "miningEarned": 25,
+        "tasksEarned": 10,
+        "referralEarned": 10
+      },
+      "isBanned": false,
+      "role": "admin"
+    },
+    "6653362852": {
+      "id": "6653362852",
+      "username": "Bgyt558",
+      "firstName": "Rh.gm",
+      "isWalletActivated": false,
+      "createdAt": 1793400790074,
+      "referralCode": "6653362852",
+      "totalReferrals": 0,
+      "activeReferrals": 0,
+      "miningState": {
+        "isMining": true,
+        "lastStartTime": 1793544218402,
+        "durationHours": 24,
+        "cycleEndTime": 1793630618402,
+        "streakDays": 2,
+        "totalMined": 51,
+        "accumulatedPending": 0,
+        "lastClaimTime": 1793544211271
+      },
+      "subscription": {
+        "tierId": "free",
+        "name": "Free Miner",
+        "multiplier": 1,
+        "expiresAt": 0
+      },
+      "balances": {
+        "availableJetton": 51,
+        "lockedJetton": 0,
+        "totalEarned": 51,
+        "miningEarned": 51,
+        "tasksEarned": 0,
+        "referralEarned": 0
+      },
+      "isBanned": false,
+      "role": "user"
+    }
+  },
+  "ledger": [
+    {
+      "id": "tx_1793544211272_4y80lhn",
+      "userId": "6653362852",
+      "type": "MINING_REWARD",
+      "amount": 51,
+      "currency": "JETTON",
+      "direction": "CREDIT",
+      "description": "24h Mining Reward (Day 1 Streak)",
+      "timestamp": 1793544211272,
+      "status": "COMPLETED"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_tg_channel",
+      "title": "Join Official Telegram Channel",
+      "description": "Subscribe to our official announcements channel for project news and updates.",
+      "category": "telegram",
+      "reward": 25,
+      "iconName": "Send",
+      "actionUrl": "https://t.me/tonmining_announcements",
+      "channelId": "@tonmining_announcements",
+      "isActive": true,
+      "createdAt": 1793310715488
+    },
+    {
+      "id": "task_tg_group",
+      "title": "Join Community Telegram Group",
+      "description": "Chat with other miners and share your mining strategies with the global community.",
+      "category": "telegram",
+      "reward": 25,
+      "iconName": "Users",
+      "actionUrl": "https://t.me/tapsidra",
+      "channelId": "@tapsidra",
+      "isActive": true,
+      "createdAt": 1793310715488
+    },
+    {
+      "id": "task_x_follow",
+      "title": "Follow on X (Twitter)",
+      "description": "Follow our official X handle and retweet the pinned mainnet launch announcement.",
+      "category": "special",
+      "reward": 35,
+      "iconName": "Twitter",
+      "actionUrl": "https://x.com/ton_mining_real",
+      "requiresProof": false,
+      "isActive": true,
+      "createdAt": 1793310715488
+    },
+    {
+      "id": "task_invite_3",
+      "title": "Invite 3 Friends to Mine",
+      "description": "Share your referral link with at least 3 friends and help them register.",
+      "category": "referral",
+      "reward": 50,
+      "iconName": "UserPlus",
+      "targetCount": 3,
+      "isActive": true,
+      "createdAt": 1793310715488
+    },
+    {
+      "id": "task_daily_checkin",
+      "title": "Daily Protocol Check-in",
+      "description": "Check in every day to claim an instant bonus towards your mining speed.",
+      "category": "daily",
+      "reward": 10,
+      "iconName": "CalendarCheck",
+      "isActive": true,
+      "createdAt": 1793310715488
+    }
+  ],
+  "taskProgress": [],
+  "withdrawals": []
+}
