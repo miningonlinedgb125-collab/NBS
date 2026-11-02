@@ -1143,10 +1143,32 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 TON Mining Bot & Jetton Server running on port ${PORT}`);
-    console.log(`💎 Official Fee Wallet: ${OFFICIAL_FEE_WALLET}`);
-    console.log(`🌐 Base URL: ${APP_URL}`);
     initTelegramBot();
+    startTunnelWatchdog();
   });
+}
+
+function startTunnelWatchdog() {
+  if (isProd) return;
+  const checkTunnel = async () => {
+    try {
+      const url = getPublicAppUrl();
+      if (!url.includes('trycloudflare.com')) {
+        setTimeout(checkTunnel, 30000);
+        return;
+      }
+      const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) throw new Error('Unhealthy');
+    } catch {
+      // Tunnel dead or disconnected -> auto-heal immediately
+      try {
+        const { exec } = await import('child_process');
+        exec('chmod +x scripts/start-tunnel.sh && ./scripts/start-tunnel.sh', () => {});
+      } catch {}
+    }
+    setTimeout(checkTunnel, 30000);
+  };
+  setTimeout(checkTunnel, 10000);
 }
 
 startServer();
