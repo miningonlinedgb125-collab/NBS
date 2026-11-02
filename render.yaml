@@ -3,6 +3,7 @@ services:
     name: nbs-cloud-mining
     env: node
     plan: free
+    region: frankfurt
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
@@ -12,5 +13,3 @@ services:
         value: 3000
       - key: TELEGRAM_BOT_TOKEN
         value: 9180620527:AAFR_DNWRbzns3p4b8z9wyw0_-VH6T9c3lM
-      - key: PUBLIC_APP_URL
-        sync: false
