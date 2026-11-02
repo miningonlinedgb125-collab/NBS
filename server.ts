@@ -1171,4 +1171,8 @@ function startTunnelWatchdog() {
   setTimeout(checkTunnel, 10000);
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
