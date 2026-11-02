@@ -22,7 +22,7 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const isProd = process.env.NODE_ENV === 'production';
 
-export const PERMANENT_PRODUCTION_URL = 'https://ais-pre-qgnc2gkwvy42boe6h3hhmo-557047217099.europe-west3.run.app';
+export const PERMANENT_PRODUCTION_URL = 'https://applet-roan-phi.vercel.app';
 
 export function getPublicAppUrl(): string {
   // 1. Check if a live tunnel was generated and saved

@@ -105,7 +105,7 @@ export async function handleBotIncomingMessage(params: {
     ? rawUrl.replace('ais-dev-', 'ais-pre-').replace(/\/$/, '')
     : rawUrl.startsWith('https://')
     ? rawUrl.replace(/\/$/, '')
-    : 'https://ais-pre-qgnc2gkwvy42boe6h3hhmo-557047217099.europe-west3.run.app';
+    : 'https://applet-roan-phi.vercel.app';
 
   // Standard Open Mini App Button - strictly clean text as requested by user
   const openAppButton = { text: '🚀 Open NBS Mining App', web_app: { url: webAppUrl } };
