@@ -179,20 +179,23 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   {t('maxAvailable')}
                 </button>
               </div>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <input
                   type="number"
+                  dir="ltr"
                   step="0.01"
                   min={minWithdrawal}
                   max={user.balances.availableJetton}
-                  placeholder={`Min ${minWithdrawal}`}
+                  placeholder={`Min: ${minWithdrawal}`}
                   value={amountInput}
                   onChange={(e) => setAmountInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-20 py-2.5 text-sm font-mono text-left text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 />
-                <span className="absolute right-3.5 top-2.5 text-xs font-bold text-cyan-400 font-mono">
-                  {settings.tokenSymbol}
-                </span>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1 bg-slate-800/90 px-2 py-0.5 rounded-md border border-cyan-500/30">
+                  <span className="text-xs font-bold text-cyan-400 font-mono">
+                    {settings.tokenSymbol}
+                  </span>
+                </div>
               </div>
             </div>
 

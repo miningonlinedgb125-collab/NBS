@@ -234,12 +234,12 @@ export const BalanceView: React.FC<BalanceViewProps> = ({
 
                   <div className="text-right shrink-0">
                     <div
+                      dir="ltr"
                       className={`text-sm font-bold font-mono ${
                         isCredit ? 'text-emerald-400' : 'text-rose-400'
                       }`}
                     >
-                      {isCredit ? '+' : '-'}
-                      {entry.amount} {entry.currency}
+                      {isCredit ? '+' : '-'}{entry.amount} NBS
                     </div>
                     <span
                       className={`inline-block text-[9px] uppercase px-1.5 py-0.5 rounded mt-0.5 font-semibold ${

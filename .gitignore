@@ -11,3 +11,4 @@ backup/
 *.zip
 .aistudio/
 
+.vercel

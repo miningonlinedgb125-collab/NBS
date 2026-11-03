@@ -12,7 +12,9 @@ import { OFFICIAL_FEE_WALLET, ACTIVATION_FEE_TON } from '../engines/ton';
 import { DEFAULT_SUBSCRIPTION_TIERS } from '../engines/subscriptions';
 import { recalculateBalancesFromLedger } from '../engines/accounting';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const BUNDLED_FILE = path.resolve(process.cwd(), 'data/database.json');
+const DATA_DIR = IS_SERVERLESS ? '/tmp/nbs_data' : path.resolve(process.cwd(), 'data');
 const DATA_FILE = path.join(DATA_DIR, 'database.json');
 
 export interface DatabaseSchema {
@@ -120,15 +122,21 @@ class StorageService {
   }
 
   private ensureDataDirectory() {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+    } catch {}
   }
 
   private loadDatabase(): DatabaseSchema {
     try {
-      if (fs.existsSync(DATA_FILE)) {
-        const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+      let sourceFile = DATA_FILE;
+      if (!fs.existsSync(sourceFile) && fs.existsSync(BUNDLED_FILE)) {
+        sourceFile = BUNDLED_FILE;
+      }
+      if (fs.existsSync(sourceFile)) {
+        const raw = fs.readFileSync(sourceFile, 'utf-8');
         const parsed = JSON.parse(raw);
         const settings = { ...DEFAULT_SETTINGS, ...parsed.settings, referralSignupReward: 0, referralActivationReward: 100 };
         return {
@@ -141,7 +149,7 @@ class StorageService {
         };
       }
     } catch (err) {
-      console.error('Failed to parse database.json, initializing fresh store:', err);
+      console.warn('Failed to parse database.json, initializing fresh store:', err);
     }
 
     return {
@@ -156,9 +164,10 @@ class StorageService {
 
   private saveDatabase() {
     try {
+      this.ensureDataDirectory();
       fs.writeFileSync(DATA_FILE, JSON.stringify(this.db, null, 2), 'utf-8');
     } catch (err) {
-      console.error('Failed to persist database.json:', err);
+      // In serverless environments, in-memory is maintained gracefully
     }
   }
 

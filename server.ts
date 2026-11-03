@@ -25,31 +25,6 @@ const isProd = process.env.NODE_ENV === 'production';
 export const PERMANENT_PRODUCTION_URL = 'https://applet-roan-phi.vercel.app';
 
 export function getPublicAppUrl(): string {
-  // 1. Check if a live tunnel was generated and saved
-  try {
-    if (fs.existsSync('/tmp/tunnel_url.txt')) {
-      const savedTunnel = fs.readFileSync('/tmp/tunnel_url.txt', 'utf8').trim();
-      if (savedTunnel.startsWith('https://')) {
-        return savedTunnel.replace(/\/$/, '');
-      }
-    }
-  } catch {}
-
-  // 2. Check settings custom URL
-  try {
-    const settings = storage.getSettings();
-    if (settings.publicWebAppUrl && settings.publicWebAppUrl.startsWith('https://')) {
-      return settings.publicWebAppUrl.replace(/\/$/, '');
-    }
-  } catch {}
-
-  const envUrl = process.env.PUBLIC_APP_URL || process.env.APP_URL || '';
-  if (envUrl.includes('ais-dev-')) {
-    return envUrl.replace('ais-dev-', 'ais-pre-').replace(/\/$/, '');
-  }
-  if (envUrl.startsWith('https://')) {
-    return envUrl.replace(/\/$/, '');
-  }
   return PERMANENT_PRODUCTION_URL;
 }
 
@@ -1144,31 +1119,7 @@ async function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 TON Mining Bot & Jetton Server running on port ${PORT}`);
     initTelegramBot();
-    startTunnelWatchdog();
   });
-}
-
-function startTunnelWatchdog() {
-  if (isProd) return;
-  const checkTunnel = async () => {
-    try {
-      const url = getPublicAppUrl();
-      if (!url.includes('trycloudflare.com')) {
-        setTimeout(checkTunnel, 30000);
-        return;
-      }
-      const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) throw new Error('Unhealthy');
-    } catch {
-      // Tunnel dead or disconnected -> auto-heal immediately
-      try {
-        const { exec } = await import('child_process');
-        exec('chmod +x scripts/start-tunnel.sh && ./scripts/start-tunnel.sh', () => {});
-      } catch {}
-    }
-    setTimeout(checkTunnel, 30000);
-  };
-  setTimeout(checkTunnel, 10000);
 }
 
 if (!process.env.VERCEL) {

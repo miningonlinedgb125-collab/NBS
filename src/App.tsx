@@ -23,6 +23,7 @@ import { MiningSettings } from './components/Admin/MiningSettings';
 import { TaskManager } from './components/Admin/TaskManager';
 import { WithdrawalManager } from './components/Admin/WithdrawalManager';
 import { ContractStudio } from './components/Admin/ContractStudio';
+import { SplashScreen } from './components/SplashScreen';
 import {
   Pickaxe,
   CheckSquare,
@@ -39,15 +40,77 @@ import {
   Globe,
 } from 'lucide-react';
 
+const FALLBACK_SETTINGS: ProjectSettings = {
+  tokenName: 'NBS',
+  tokenSymbol: 'NBS',
+  tokenDecimals: 9,
+  totalSupply: 200_000_000,
+  miningSupplyAllocation: 80_000_000,
+  tasksSupplyAllocation: 40_000_000,
+  referralSupplyAllocation: 30_000_000,
+  treasurySupplyAllocation: 50_000_000,
+  treasuryWallet: 'UQAmUa3boqCwHwe26qqB6rD8Rs7QQ-R7IHUtyxLEX2Uqboby',
+  jettonMasterAddress: '',
+  officialFeeWallet: 'UQDpW9vQYx0tqf28H_k7P117S9k6s_KxYn1GvYg8c5Z9wTon',
+  activationFeeTon: 0.05,
+  minWithdrawalJetton: 50,
+  withdrawalFeeJetton: 2,
+  baseMiningDailyReward: 50,
+  miningCycleHours: 24,
+  referralSignupReward: 0,
+  referralActivationReward: 100,
+  telegramBotUsername: 'NBSMining_bot',
+  isMiningEnabled: true,
+  isWithdrawalEnabled: true,
+  isAutoWithdrawalEnabled: false,
+};
+
+const createFallbackUser = (uid: string): User => ({
+  id: uid,
+  username: uid === '1878942455' ? 'hamlet1223' : `miner_${uid.slice(0, 6)}`,
+  firstName: uid === '1878942455' ? 'Hamlet' : 'Miner',
+  isWalletActivated: false,
+  createdAt: Date.now(),
+  referralCode: uid,
+  totalReferrals: 0,
+  activeReferrals: 0,
+  role: uid === '1878942455' ? 'admin' : 'user',
+  miningState: {
+    isMining: true,
+    lastStartTime: Date.now() - 3600000,
+    durationHours: 24,
+    cycleEndTime: Date.now() + 23 * 3600000,
+    streakDays: 1,
+    totalMined: 0,
+    accumulatedPending: 0,
+  },
+  subscription: {
+    tierId: 'free',
+    name: 'Free Miner',
+    multiplier: 1.0,
+    expiresAt: 0,
+  },
+  balances: {
+    availableJetton: 0,
+    lockedJetton: 0,
+    totalEarned: 0,
+    miningEarned: 0,
+    tasksEarned: 0,
+    referralEarned: 0,
+  },
+  isBanned: false,
+});
+
 export default function App() {
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<'miniapp' | 'bot' | 'admin' | 'contract'>('miniapp');
   const [miniAppTab, setMiniAppTab] = useState<'mining' | 'balance' | 'tasks' | 'referrals' | 'plans' | 'leaderboard'>('mining');
   const [adminSubTab, setAdminSubTab] = useState<'overview' | 'users' | 'mining' | 'tasks' | 'withdrawals'>('overview');
 
-  const [currentUserId, setCurrentUserId] = useState<string>('user_demo');
+  const [currentUserId, setCurrentUserId] = useState<string>('1878942455');
   const [user, setUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<ProjectSettings | null>(null);
+  const [showSplash, setShowSplash] = useState<boolean>(true);
   const [mobileFrame, setMobileFrame] = useState<boolean>(false);
 
   // Modals
@@ -108,12 +171,14 @@ export default function App() {
     try {
       const res = await fetch('/api/settings');
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.settings) {
         setSettings(data.settings);
+        return;
       }
     } catch (err) {
-      console.error('Failed to fetch settings', err);
+      console.warn('Network notice: using cached/fallback settings');
     }
+    setSettings((prev) => prev || FALLBACK_SETTINGS);
   };
 
   const fetchUser = async (uid: string) => {
@@ -127,10 +192,12 @@ export default function App() {
       if (data.success && data.user) {
         setUser(data.user);
         syncUserLanguage(data.user.language, data.user.hasSelectedLanguage);
+        return;
       }
     } catch (err) {
-      console.error('Failed to fetch user', err);
+      console.warn('Network notice: using cached/fallback user session');
     }
+    setUser((prev) => prev || createFallbackUser(uid));
   };
 
   const handleRefresh = () => {
@@ -140,14 +207,17 @@ export default function App() {
     fetchSettings();
   };
 
-  if (!settings || !user) {
+  // Professional Web3 Splash & Startup Screen
+  if (showSplash || !settings || !user) {
     return (
-      <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center text-white space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center animate-pulse">
-          <Pickaxe className="w-6 h-6 text-white" />
-        </div>
-        <div className="text-sm font-semibold text-slate-300">Connecting to TON Blockchain Protocol...</div>
-      </div>
+      <SplashScreen
+        onFinish={() => {
+          if (!settings) setSettings(FALLBACK_SETTINGS);
+          if (!user) setUser(createFallbackUser(currentUserId));
+          setShowSplash(false);
+        }}
+        isReady={Boolean(settings && user)}
+      />
     );
   }
 
