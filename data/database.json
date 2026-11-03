@@ -12,7 +12,7 @@
     "jettonMasterAddress": "",
     "officialFeeWallet": "UQCIi7mqL7DVgxiTMUYP0d6OsqIXKVxclUIgGoq17BTB_im-",
     "activationFeeTon": 0.05,
-    "minWithdrawalJetton": 50,
+    "minWithdrawalJetton": 500,
     "withdrawalFeeJetton": 2,
     "baseMiningDailyReward": 50,
     "miningCycleHours": 24,

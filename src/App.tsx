@@ -53,7 +53,7 @@ const FALLBACK_SETTINGS: ProjectSettings = {
   jettonMasterAddress: '',
   officialFeeWallet: 'UQDpW9vQYx0tqf28H_k7P117S9k6s_KxYn1GvYg8c5Z9wTon',
   activationFeeTon: 0.05,
-  minWithdrawalJetton: 50,
+  minWithdrawalJetton: 500,
   withdrawalFeeJetton: 2,
   baseMiningDailyReward: 50,
   miningCycleHours: 24,

@@ -23083,7 +23083,7 @@ var DEFAULT_SETTINGS = {
   // To be filled upon deployment or set by admin
   officialFeeWallet: OFFICIAL_FEE_WALLET,
   activationFeeTon: ACTIVATION_FEE_TON,
-  minWithdrawalJetton: 50,
+  minWithdrawalJetton: 500,
   withdrawalFeeJetton: 2,
   baseMiningDailyReward: 50,
   // 50 NBS per 24h cycle
@@ -24255,7 +24255,7 @@ app.get(["/health", "/api/health"], (_req, res) => {
     provider: "Vercel Serverless"
   });
 });
-app.get(["/api/settings", "/settings"], (_req, res) => {
+app.get(["/api/settings", "/settings", "/api/admin/settings", "/admin/settings"], (_req, res) => {
   try {
     const settings = storage.getSettings();
     const { telegramBotToken, ...publicSettings } = settings;
@@ -24264,7 +24264,7 @@ app.get(["/api/settings", "/settings"], (_req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-app.post(["/api/settings", "/settings"], (req, res) => {
+app.post(["/api/settings", "/settings", "/api/admin/settings", "/admin/settings"], (req, res) => {
   try {
     const updated = storage.updateSettings(req.body);
     const { telegramBotToken, ...publicSettings } = updated;
@@ -24458,15 +24458,58 @@ app.get(["/api/tasks", "/tasks"], (_req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-app.post(["/api/tasks/:id/complete", "/tasks/:id/complete"], (req, res) => {
+app.post(["/api/tasks/complete", "/tasks/complete", "/api/tasks/:id/complete", "/tasks/:id/complete"], async (req, res) => {
   try {
-    const { userId } = req.body;
-    const taskId = req.params.id;
+    const userId = req.body.userId;
+    const taskId = req.body.taskId || req.params.id;
     const user = storage.getUser(userId);
-    const task = storage.getTasks().find((t) => t.id === taskId);
-    if (!user || !task) {
-      return res.status(404).json({ success: false, error: "User or Task not found" });
+    const task = storage.getTask(taskId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!task || !task.isActive) return res.status(404).json({ success: false, message: "Task not found or inactive" });
+    const progressList = storage.getUserTaskProgress(userId);
+    const alreadyDone = progressList.some((p) => p.taskId === taskId && p.status === "COMPLETED");
+    if (alreadyDone) {
+      return res.status(400).json({ success: false, message: "\u0627\u0644\u0645\u0647\u0645\u0629 \u0645\u0643\u062A\u0645\u0644\u0629 \u0648\u0645\u0633\u062A\u0644\u0645\u0629 \u0645\u0633\u0628\u0642\u0627\u064B." });
     }
+    if (task.category === "referral" && task.targetCount) {
+      const qualified = Math.max(user.activeReferrals || 0, user.totalReferrals || 0);
+      if (qualified < task.targetCount) {
+        return res.status(400).json({
+          success: false,
+          message: `\u0627\u0644\u0645\u0647\u0645\u0629 \u062A\u062A\u0637\u0644\u0628 \u062F\u0639\u0648\u0629 ${task.targetCount} \u0623\u0635\u062F\u0642\u0627\u0621 (\u0644\u062F\u064A\u0643 \u062D\u0627\u0644\u064A\u0627\u064B ${qualified}).`
+        });
+      }
+    }
+    if (task.category === "telegram" && task.channelId) {
+      const settings = storage.getSettings();
+      const token = settings.telegramBotToken || "9180620527:AAFR_DNWRbzns3p4b8z9wyw0_-VH6T9c3lM";
+      if (token && /^\d+$/.test(userId)) {
+        try {
+          const tgRes = await fetch(
+            `https://api.telegram.org/bot${token}/getChatMember?chat_id=${encodeURIComponent(
+              task.channelId
+            )}&user_id=${userId}`
+          );
+          const tgData = await tgRes.json();
+          if (tgData.ok && tgData.result) {
+            const memberStatus = tgData.result.status;
+            if (["left", "kicked"].includes(memberStatus)) {
+              return res.status(400).json({
+                success: false,
+                message: "\u274C \u0644\u0645 \u064A\u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u0627\u0634\u062A\u0631\u0627\u0643\u0643 \u0641\u064A \u0627\u0644\u0642\u0646\u0627\u0629! \u064A\u0631\u062C\u0649 \u0627\u0644\u0627\u0646\u0636\u0645\u0627\u0645 \u0623\u0648\u0644\u0627\u064B \u0639\u0628\u0631 \u0627\u0644\u0631\u0627\u0628\u0637 \u0642\u0628\u0644 \u0627\u0633\u062A\u0644\u0627\u0645 \u0627\u0644\u0645\u0643\u0627\u0641\u0623\u0629."
+              });
+            }
+          }
+        } catch {
+        }
+      }
+    }
+    storage.setTaskProgress({
+      taskId,
+      userId,
+      status: "COMPLETED",
+      completedAt: Date.now()
+    });
     user.balances.availableJetton += task.reward;
     user.balances.tasksEarned += task.reward;
     user.balances.totalEarned += task.reward;
@@ -24480,9 +24523,14 @@ app.post(["/api/tasks/:id/complete", "/tasks/:id/complete"], (req, res) => {
       status: "COMPLETED"
     });
     storage.saveUser(user);
-    res.json({ success: true, reward: task.reward, user });
+    res.json({
+      success: true,
+      reward: task.reward,
+      message: `\u062A\u0647\u0627\u0646\u064A\u0646\u0627! \u062A\u0645 \u0627\u0644\u062A\u062D\u0642\u0642 \u0645\u0646 \u0627\u0634\u062A\u0631\u0627\u0643\u0643 \u0628\u0646\u062C\u0627\u062D \u0648\u0625\u0636\u0627\u0641\u0629 +${task.reward} NBS \u0644\u0631\u0635\u064A\u062F\u0643.`,
+      user
+    });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 app.post(["/api/tasks", "/tasks"], (req, res) => {
@@ -24598,6 +24646,140 @@ app.get(["/api/ledger", "/ledger"], (req, res) => {
     const userId = req.query.userId;
     const ledger = userId ? storage.getUserLedger(userId) : storage.getAllLedgerEntries();
     res.json({ success: true, ledger });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.get(["/api/admin/overview", "/admin/overview"], (_req, res) => {
+  try {
+    const users = storage.getAllUsers();
+    const settings = storage.getSettings();
+    const withdrawals = storage.getWithdrawals();
+    const tasks = storage.getTasks();
+    const totalUsers = users.length;
+    const activeMiners = users.filter((u) => u.miningState.isMining).length;
+    const totalMined = users.reduce((sum, u) => sum + (u.balances.miningEarned || 0), 0);
+    const pendingWithdrawals = withdrawals.filter((w) => w.status === "PENDING").length;
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        activeMiners,
+        totalMined,
+        pendingWithdrawals,
+        totalSupply: settings.totalSupply,
+        circulatingSupply: totalMined
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.get(["/api/admin/tasks", "/admin/tasks"], (_req, res) => {
+  try {
+    const tasks = storage.getTasks();
+    res.json({ success: true, tasks });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.post(["/api/admin/tasks", "/admin/tasks"], (req, res) => {
+  try {
+    const task = req.body;
+    if (!task.id) {
+      task.id = `task_${Date.now()}`;
+      task.createdAt = Date.now();
+    }
+    if (task.reward !== void 0) task.reward = Number(task.reward) || 20;
+    if (task.isActive === void 0) task.isActive = true;
+    const saved = storage.saveTask(task);
+    res.json({ success: true, task: saved });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.put(["/api/admin/tasks/:id", "/admin/tasks/:id"], (req, res) => {
+  try {
+    const existing = storage.getTask(req.params.id);
+    if (!existing) return res.status(404).json({ success: false, message: "Task not found" });
+    const updated = storage.saveTask({ ...existing, ...req.body });
+    res.json({ success: true, task: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.delete(["/api/admin/tasks/:id", "/admin/tasks/:id"], (req, res) => {
+  try {
+    storage.deleteTask(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.get(["/api/admin/users", "/admin/users"], (_req, res) => {
+  try {
+    const users = storage.getAllUsers();
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.post(["/api/admin/users/:id/ban", "/admin/users/:id/ban"], (req, res) => {
+  try {
+    const { isBanned } = req.body;
+    const user = storage.getUser(req.params.id);
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
+    user.isBanned = Boolean(isBanned);
+    storage.saveUser(user);
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.post(["/api/admin/users/:id/activate-wallet", "/admin/users/:id/activate-wallet"], (req, res) => {
+  try {
+    const user = storage.getUser(req.params.id);
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
+    user.isWalletActivated = true;
+    user.activationTxHash = `tx_admin_override_${Date.now()}`;
+    storage.saveUser(user);
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.post(["/api/admin/withdrawals/:id/action", "/admin/withdrawals/:id/action"], (req, res) => {
+  try {
+    const { action, txHash, reason } = req.body;
+    const item = storage.getWithdrawals().find((w) => w.id === req.params.id);
+    if (!item) return res.status(404).json({ success: false, error: "Withdrawal not found" });
+    if (action === "approve") {
+      const updated = storage.updateWithdrawal(item.id, {
+        status: "APPROVED",
+        blockchainTxHash: txHash || `tx_ton_${Date.now()}`,
+        processedAt: Date.now()
+      });
+      const user = storage.getUser(item.userId);
+      if (user) {
+        user.balances.lockedJetton = Math.max(0, user.balances.lockedJetton - item.amount);
+        storage.saveUser(user);
+      }
+      return res.json({ success: true, withdrawal: updated || item });
+    } else if (action === "reject") {
+      const updated = storage.updateWithdrawal(item.id, {
+        status: "REJECTED",
+        processedAt: Date.now(),
+        adminNote: reason
+      });
+      const user = storage.getUser(item.userId);
+      if (user) {
+        user.balances.lockedJetton = Math.max(0, user.balances.lockedJetton - item.amount);
+        user.balances.availableJetton += item.amount;
+        storage.saveUser(user);
+      }
+      return res.json({ success: true, withdrawal: updated || item });
+    }
+    res.status(400).json({ success: false, error: "Invalid action" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS: ProjectSettings = {
   jettonMasterAddress: '', // To be filled upon deployment or set by admin
   officialFeeWallet: OFFICIAL_FEE_WALLET,
   activationFeeTon: ACTIVATION_FEE_TON,
-  minWithdrawalJetton: 50,
+  minWithdrawalJetton: 500,
   withdrawalFeeJetton: 2,
   baseMiningDailyReward: 50, // 50 NBS per 24h cycle
   miningCycleHours: 24,

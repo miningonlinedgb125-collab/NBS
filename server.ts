@@ -834,12 +834,19 @@ app.post('/api/admin/settings', async (req: Request, res: Response) => {
       }),
     }).catch(() => {});
   }
+
+  // Dual-sync to Vercel cloud server
+  fetch('https://applet-roan-phi.vercel.app/api/admin/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req.body),
+  }).catch(() => {});
+
   res.json({ success: true, settings: updated });
 });
 
 app.get('/api/admin/tasks', (_req: Request, res: Response) => {
   const tasks = storage.getTasks();
-  const progress = storage.getUserTaskProgress(''); // all or count
   res.json({ success: true, tasks });
 });
 
@@ -852,6 +859,14 @@ app.post('/api/admin/tasks', (req: Request, res: Response) => {
   if (task.reward !== undefined) task.reward = Number(task.reward) || 20;
   if (task.isActive === undefined) task.isActive = true;
   storage.saveTask(task);
+
+  // Dual-sync to Vercel cloud server
+  fetch('https://applet-roan-phi.vercel.app/api/admin/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(task),
+  }).catch(() => {});
+
   res.json({ success: true, task });
 });
 

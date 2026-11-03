@@ -32,6 +32,14 @@ export const TasksView: React.FC<TasksViewProps> = ({
   const [claimingTaskId, setClaimingTaskId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ id: string; text: string; error?: boolean } | null>(null);
 
+  const [openedTasks, setOpenedTasks] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('nbs_opened_tasks') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
   useEffect(() => {
     fetchTasks();
   }, [user.id]);
@@ -49,24 +57,49 @@ export const TasksView: React.FC<TasksViewProps> = ({
     }
   };
 
-  const handleCompleteTask = async (taskId: string) => {
-    setClaimingTaskId(taskId);
+  const handleOpenTask = (task: Task) => {
+    if (task.actionUrl) {
+      window.open(task.actionUrl, '_blank');
+      const next = { ...openedTasks, [task.id]: true };
+      setOpenedTasks(next);
+      try {
+        localStorage.setItem('nbs_opened_tasks', JSON.stringify(next));
+      } catch {}
+      setFeedback({
+        id: task.id,
+        text: '🔗 تم فتح الرابط! يرجى الانضمام والاشتراك أولاً، ثم العودة والضغط على "تحقق واستلام المكافأة".',
+      });
+    }
+  };
+
+  const handleCompleteTask = async (task: Task) => {
+    if (task.actionUrl && !openedTasks[task.id]) {
+      setFeedback({
+        id: task.id,
+        text: '⚠️ يجب الضغط على رابط المهمة والاشتراك الفعلي أولاً قبل التحقق واستلام المكافأة!',
+        error: true,
+      });
+      handleOpenTask(task);
+      return;
+    }
+
+    setClaimingTaskId(task.id);
     setFeedback(null);
     try {
       const res = await fetch('/api/tasks/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, taskId }),
+        body: JSON.stringify({ userId: user.id, taskId: task.id, visited: true }),
       });
       const data = await res.json();
       if (!data.success) {
-        throw new Error(data.message || 'Task completion failed');
+        throw new Error(data.message || 'فشل التحقق من إكمال المهمة');
       }
-      setFeedback({ id: taskId, text: data.message || t('claimedBadge') });
+      setFeedback({ id: task.id, text: data.message || t('claimedBadge') });
       fetchTasks();
       onRefreshUser();
     } catch (err: any) {
-      setFeedback({ id: taskId, text: err.message || 'Failed to claim task', error: true });
+      setFeedback({ id: task.id, text: err.message || 'تعذر التحقق من الاشتراك', error: true });
     } finally {
       setClaimingTaskId(null);
     }
@@ -189,24 +222,24 @@ export const TasksView: React.FC<TasksViewProps> = ({
                       </span>
                     ) : (
                       <div className="flex items-center gap-2">
-                        {task.actionUrl && (
-                          <a
-                            href={task.actionUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-white transition-colors"
-                            title={t('openLink')}
+                        {task.actionUrl && !openedTasks[task.id] ? (
+                          <button
+                            onClick={() => handleOpenTask(task)}
+                            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:brightness-110 text-white font-bold text-xs shadow-md shadow-cyan-500/25 transition-all flex items-center gap-1.5 animate-pulse"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
+                            <span>{task.category === 'telegram' ? 'انضمام للقناة' : 'فتح الرابط'}</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleCompleteTask(task)}
+                            disabled={isClaiming}
+                            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition-all flex items-center gap-1.5"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{isClaiming ? 'جارِ التحقق...' : 'تحقق واستلام'}</span>
+                          </button>
                         )}
-                        <button
-                          onClick={() => handleCompleteTask(task.id)}
-                          disabled={isClaiming}
-                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1"
-                        >
-                          {isClaiming ? t('verifyingBtn') : t('claimBtn')}
-                        </button>
                       </div>
                     )}
                   </div>

@@ -98,7 +98,8 @@ export const MiningView: React.FC<MiningViewProps> = ({
       if (!data.success) {
         throw new Error(data.message || 'Failed to claim reward');
       }
-      setActionSuccess(`Claimed +${data.claimedAmount} ${settings.tokenSymbol}!`);
+      const amount = data.reward ?? data.claimedAmount ?? 0;
+      setActionSuccess(`+${amount} ${settings.tokenSymbol} ${t('claimedBadge') || 'تم استلام المكافأة بنجاح!'}`);
       onRefreshUser();
     } catch (err: any) {
       setActionError(err.message || 'Error claiming reward');
